@@ -1,0 +1,102 @@
+<template>
+  <div class="bg-light" style="min-height: 100vh;">
+    <div class="container">
+      <div class="row justify-content-center mt-5">
+        <div class="col-md-5">
+          <div class="card shadow">
+            <div class="card-body p-5">
+              <div class="text-center mb-4">
+                <h2><i class="bi bi-book text-primary"></i></h2>
+                <h4>登录</h4>
+                <p class="text-muted">欢迎回来！</p>
+              </div>
+
+              <form @submit.prevent="handleLogin">
+                <div class="mb-3">
+                  <label for="username" class="form-label">用户名</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="username"
+                    v-model="username"
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="password" class="form-label">密码</label>
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="password"
+                    v-model="password"
+                    required
+                  />
+                </div>
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-primary btn-lg" :disabled="loading">
+                    <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+                    登录
+                  </button>
+                </div>
+              </form>
+
+              <hr class="my-4" />
+
+              <p class="text-center mb-0">
+                还没有账号？<router-link to="/register">立即注册</router-link>
+              </p>
+            </div>
+          </div>
+
+          <div class="text-center mt-3">
+            <router-link to="/" class="text-muted">
+              <i class="bi bi-arrow-left"></i> 返回首页
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useUserStore } from '../stores/user'
+import { showToast } from '../utils/toast'
+
+const router = useRouter()
+const route = useRoute()
+const userStore = useUserStore()
+
+const username = ref('')
+const password = ref('')
+const loading = ref(false)
+
+async function handleLogin() {
+  loading.value = true
+  
+  try {
+    const result = await userStore.login(username.value, password.value)
+    
+    if (result.success) {
+      showToast('登录成功！', 'success')
+      
+      // 检查是否有重定向URL
+      const redirect = route.query.redirect
+      setTimeout(() => {
+        if (redirect) {
+          router.push(redirect)
+        } else {
+          router.push('/dashboard')
+        }
+      }, 500)
+    } else {
+      showToast(result.message || '登录失败', 'error')
+    }
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
